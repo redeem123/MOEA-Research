@@ -39,15 +39,24 @@ for a = 1:numel(algoFolders)
         hvFile = fullfile(algoDir, folderName, 'final_hv.mat');
         
         if exist(hvFile, 'file')
-            load(hvFile, 'bestScores');
+            data = load(hvFile);
+            if isfield(data, 'bestScores')
+                bestScores = data.bestScores;
+            elseif isfield(data, 'runScores')
+                bestScores = data.runScores;
+            else
+                warning('No bestScores/runScores in %s. Run analysis/compute_metrics.m first.', hvFile);
+                continue;
+            end
+
+            if isempty(bestScores)
+                warning('Empty scores in %s. Run analysis/compute_metrics.m first.', hvFile);
+                continue;
+            end
             
             cleanName = strrep(folderName, '_', '\_');
             
-            % Metrics (bestScores: [Runs x M]) - Assuming HV is col 1, PD is col 2
-            % Note: run_nsga2 and run_nmopso store mean objectives in runScores?
-            % Wait, run_nsga2 saves:
-            % runScores(run, :) = [calMetric(1...), calMetric(2...)];
-            % So col 1 is HV, col 2 is PD.
+            % Metrics (bestScores: [Runs x 2]) - col 1 is HV, col 2 is PD.
             
             meanHV = mean(bestScores(:,1));
             stdHV  = std(bestScores(:,1));

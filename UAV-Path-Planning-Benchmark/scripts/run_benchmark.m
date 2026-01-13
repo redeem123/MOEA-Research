@@ -11,7 +11,11 @@ run(fullfile(scriptDir, '..', 'startup.m'));
 params.Generations = 500;
 params.pop = 100;
 params.Runs = 5;
+% Metrics (HV/PD) are computed offline via analysis/compute_metrics.m.
 params.computeMetrics = false;
+% Parallel mode: 'parfeval' avoids parfor transparency errors on some setups.
+params.useParallel = true;
+params.parallelMode = 'parfeval';
 params.resultsDir = fullfile(fileparts(mfilename('fullpath')), '..', 'results');
 
 % Get all benchmark problems
@@ -26,7 +30,7 @@ startTime = tic;
 fprintf('Starting Benchmark Suite at %s\n', datestr(now));
 fprintf('-------------------------------------------\n');
 
-for i = 1:(numel(problemFiles)-13)
+for i = 1:numel(problemFiles)
     % Load Problem
     fileName = problemFiles(i).name;
     load(fullfile(problemDir, fileName), 'terrainStruct');
@@ -35,8 +39,10 @@ for i = 1:(numel(problemFiles)-13)
     problemName = strrep(fileName, 'terrainStruct_', '');
     problemName = strrep(problemName, '.mat', '');
     params.problemName = problemName;
-    
-    fprintf('Problem (%d/%d): %s\n', i, numel(problemFiles), problemName);
+    params.problemIndex = i;
+
+    fprintf('Problem (%d/%d): %s\n', i, numel(problemFiles), problemName);      
+    problemStart = tic;
     
     %--- Execute NMOPSO ---
     fprintf('>>> Running NMOPSO...\n');
@@ -50,7 +56,7 @@ for i = 1:(numel(problemFiles)-13)
     if ~isfolder(params.resultsDir), mkdir(params.resultsDir); end
     run_nsga2(terrainStruct, params); 
     
-    fprintf('  - Completed in %.2f seconds\n', toc(startTime));
+    fprintf('  - Completed in %.2f seconds\n', toc(problemStart));
     fprintf('-------------------------------------------\n');
 end
 

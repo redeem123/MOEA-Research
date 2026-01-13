@@ -24,7 +24,8 @@ This repository is designed for rigorous multi-objective path planning research.
 4. Update `scripts/run_benchmark.m` to include your new algorithm in the comparison loop.
 
 ## 4. Statistical Analysis
-After running the benchmark, use `analysis/statistical_analysis.m` (coming soon) to:
+After running the benchmark, compute metrics offline with `analysis/compute_metrics.m`,
+then use `analysis/statistical_analysis.m` (coming soon) to:
 - Generate mean/std tables for all metrics.
 - Perform Wilcoxon Rank-Sum tests for significance.
 - Export results to LaTeX format.

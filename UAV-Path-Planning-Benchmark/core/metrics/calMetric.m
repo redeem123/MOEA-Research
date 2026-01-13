@@ -1,4 +1,4 @@
-function [Score] = calMetric(MetricIndex, PopObj, problemIndex, M)
+function [Score] = calMetric(MetricIndex, PopObj, problemIndex, M, hvSamples)
     % calMetric: Calculate performance metrics
     % MetricIndex: 1 for Hypervolume (HV), 2 for Pure Diversity (PD)
     % M: Number of objectives
@@ -27,7 +27,11 @@ function [Score] = calMetric(MetricIndex, PopObj, problemIndex, M)
         else
             refPoint = ones(1, M) * 10000;
         end
-        Score = HV(PopObj, refPoint);
+        if nargin >= 5 && ~isempty(hvSamples)
+            Score = HV(PopObj, refPoint, hvSamples);
+        else
+            Score = HV(PopObj, refPoint);
+        end
     else
         Score = PD(PopObj);
     end

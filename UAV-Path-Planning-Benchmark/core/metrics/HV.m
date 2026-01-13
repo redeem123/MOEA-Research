@@ -1,4 +1,4 @@
-function [Score,PopObj] = HV(PopObj,MaxPopObj)
+function [Score,PopObj] = HV(PopObj,MaxPopObj,SampleNum)
 % <metric> <max>
 % Hypervolume
 
@@ -31,6 +31,13 @@ function [Score,PopObj] = HV(PopObj,MaxPopObj)
     PopObj(any(PopObj>1,2),:) = [];
     % The reference point is set to (1,1,...)
     RefPoint = ones(1,M);
+    if nargin < 3 || isempty(SampleNum) || ~isfinite(SampleNum)
+        SampleNum = 10000;
+    end
+    if SampleNum < 1
+        SampleNum = 1;
+    end
+
     if isempty(PopObj)
         Score = 0;
     elseif M < 4
@@ -56,7 +63,6 @@ function [Score,PopObj] = HV(PopObj,MaxPopObj)
         end
     else
         % Estimate the HV value by Monte Carlo estimation (Reduced for speed)
-        SampleNum = 10000;
         MaxValue  = RefPoint;
         MinValue  = min(PopObj,[],1);
         Samples   = unifrnd(repmat(MinValue,SampleNum,1),repmat(MaxValue,SampleNum,1));
