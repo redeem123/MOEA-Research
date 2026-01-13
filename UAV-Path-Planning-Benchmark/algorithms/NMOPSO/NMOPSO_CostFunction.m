@@ -5,6 +5,10 @@ function cost = NMOPSO_CostFunction(sol, model, ~)
     % Reconstruct absolute path
     xs = model.start(1); ys = model.start(2); zs = model.start(3);
     xf = model.end(1); yf = model.end(2); zf = model.end(3);
+    if isfield(model, 'safeH') && ~isempty(model.safeH)
+        zs = model.safeH;
+        zf = model.safeH;
+    end
     
     x_all = [xs, sol.x, xf];
     y_all = [ys, sol.y, yf];

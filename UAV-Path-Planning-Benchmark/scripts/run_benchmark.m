@@ -11,6 +11,7 @@ run(fullfile(scriptDir, '..', 'startup.m'));
 params.Generations = 500;
 params.pop = 100;
 params.Runs = 5;
+params.computeMetrics = false;
 params.resultsDir = fullfile(fileparts(mfilename('fullpath')), '..', 'results');
 
 % Get all benchmark problems

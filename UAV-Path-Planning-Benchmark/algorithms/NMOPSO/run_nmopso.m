@@ -2,6 +2,18 @@ function [bestScores, gen_hv] = run_nmopso(model, params)
     Generations = params.Generations;
     pop = params.pop;
     M = 4; problemIndex = 3; 
+    metricInterval = 50;
+    if isfield(params, 'metricInterval')
+        metricInterval = params.metricInterval;
+    end
+    computeMetrics = true;
+    if isfield(params, 'computeMetrics')
+        computeMetrics = params.computeMetrics;
+    end
+    initMaxTries = 50;
+    if isfield(params, 'initMaxTries')
+        initMaxTries = params.initMaxTries;
+    end
     
     resultsPath = fullfile(params.resultsDir, params.problemName);
     if ~isfolder(resultsPath), mkdir(resultsPath); end
@@ -33,7 +45,9 @@ function [bestScores, gen_hv] = run_nmopso(model, params)
         
         % Initialization
         isInit = false;
-        while ~isInit
+        initTries = 0;
+        while ~isInit && initTries < initMaxTries
+            initTries = initTries + 1;
             for i = 1:pop
                 particle(i).Position.r = unifrnd(VarMin.r, VarMax.r, VarSize);
                 particle(i).Position.psi = unifrnd(VarMin.psi, VarMax.psi, VarSize);
@@ -54,6 +68,13 @@ function [bestScores, gen_hv] = run_nmopso(model, params)
                     isInit = true;
                 end
             end
+        end
+        if ~isInit
+            allCosts = horzcat(particle.Cost)';
+            sumCosts = sum(allCosts, 2);
+            sumCosts(~isfinite(sumCosts)) = inf;
+            [~, bestIdx] = min(sumCosts);
+            GlobalBest = particle(bestIdx).Best;
         end
         
         particle = NMOPSO_Utils.DetermineDomination(particle);
@@ -153,7 +174,7 @@ function [bestScores, gen_hv] = run_nmopso(model, params)
                 PopObj = horzcat(rep.Cost)';
                 if size(PopObj, 2) ~= M, if size(PopObj, 1) == M, PopObj = PopObj'; end, end
                 
-                if mod(it, 50) == 0 || it == 1 || it == Generations
+                if computeMetrics && (mod(it, metricInterval) == 0 || it == 1 || it == Generations)
                     local_gen_hv(it, :) = [calMetric(1, PopObj, problemIndex, M), calMetric(2, PopObj, problemIndex, M)];
                 elseif it > 1
                     local_gen_hv(it, :) = local_gen_hv(it-1, :);
@@ -174,7 +195,13 @@ function [bestScores, gen_hv] = run_nmopso(model, params)
                 cart = NMOPSO_Utils.SphericalToCart(rep(i_p).Position, model);
                 x_full = [model.start(1), cart.x, model.end(1)]';
                 y_full = [model.start(2), cart.y, model.end(2)]';
-                z_full = [model.start(3), cart.z, model.end(3)]';
+                start_z = model.start(3);
+                end_z = model.end(3);
+                if isfield(model, 'safeH') && ~isempty(model.safeH)
+                    start_z = model.safeH;
+                    end_z = model.safeH;
+                end
+                z_full = [start_z, cart.z, end_z]';
                 z_abs_path = zeros(size(x_full));
                 for k=1:length(x_full)
                     xi = max(1, min(model.xmax, round(x_full(k))));

@@ -114,9 +114,14 @@ classdef NMOPSO_Utils
             xnew.phi = x.Position.phi + randn(1,nVar).*x.Best.Position.phi*beta;
             xnew.psi = x.Position.psi + randn(1,nVar).*x.Best.Position.psi*beta;
 
-            xnew.r = max(VarMin.r, min(VarMax.r, xnew.r));
-            xnew.phi = max(VarMin.phi, min(VarMax.phi, xnew.phi));
-            xnew.psi = max(VarMin.psi, min(VarMax.psi, xnew.psi));
+            xnew.r = max(VarMax.r, xnew.r);
+            xnew.r = min(VarMin.r, xnew.r);
+
+            xnew.phi = max(VarMax.phi, xnew.phi);
+            xnew.phi = min(VarMin.phi, xnew.phi);
+
+            xnew.psi = max(VarMax.psi, xnew.psi);
+            xnew.psi = min(VarMin.psi, xnew.psi);
         end
         
         function A = TransfomationMatrix(r, phi, psi)
@@ -136,9 +141,14 @@ classdef NMOPSO_Utils
             
             n = length(solution.r);
             xs = model.start(1); ys = model.start(2); zs = model.start(3);
+            xf = model.end(1); yf = model.end(2); zf = model.end(3);
+            if isfield(model, 'safeH') && ~isempty(model.safeH)
+                zs = model.safeH;
+                zf = model.safeH;
+            end
             
             % Base start position and initial orientation towards target
-            dirVector = model.end - model.start;
+            dirVector = [xf - xs; yf - ys; zf - zs];
             phistart = atan2(dirVector(2), dirVector(1));
             psistart = atan2(dirVector(3), norm(dirVector(1:2)));
             
