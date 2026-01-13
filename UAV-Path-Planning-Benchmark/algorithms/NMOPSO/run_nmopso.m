@@ -4,7 +4,7 @@ function [bestScores, gen_hv] = run_nmopso(model, params)
     M = 4; problemIndex = 3; 
     
     % Override model resolution
-    model.n = 20;
+    model.n = 10;
     
     resultsPath = fullfile(params.resultsDir, params.problemName);
     if ~isfolder(resultsPath), mkdir(resultsPath); end

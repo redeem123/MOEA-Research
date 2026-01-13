@@ -10,7 +10,7 @@ function [bestScores, gen_hv] = run_nsga2(model, params)
     problemIndex = 3; % Static for current benchmark
     
     % Override model resolution for better agility
-    model.n = 20;
+    model.n = 10;
     
     % Boundary definition
     MinValue = [model.xmin, model.ymin, model.zmin];
