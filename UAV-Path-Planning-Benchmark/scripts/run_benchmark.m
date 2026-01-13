@@ -39,10 +39,10 @@ for i = 1:(numel(problemFiles)-13)
     fprintf('Problem (%d/%d): %s\n', i, numel(problemFiles), problemName);
     
     %--- Execute NMOPSO ---
-    %fprintf('>>> Running NMOPSO...\n');
-    %params.resultsDir = fullfile(fileparts(mfilename('fullpath')), '..', 'results', 'NMOPSO');
-    %if ~isfolder(params.resultsDir), mkdir(params.resultsDir); end
-    %run_nmopso(terrainStruct, params);
+    fprintf('>>> Running NMOPSO...\n');
+    params.resultsDir = fullfile(fileparts(mfilename('fullpath')), '..', 'results', 'NMOPSO');
+    if ~isfolder(params.resultsDir), mkdir(params.resultsDir); end
+    run_nmopso(terrainStruct, params);
 
     % --- Execute NSGA-II ---
     fprintf('>>> Running NSGA-II...\n');

@@ -24,6 +24,9 @@ function [bestScores, gen_hv] = run_nmopso(model, params)
     nGrid = 5; alpha_grid = 0.1; beta = 2; gamma = 2; mu = 0.5; delta = 20;           
     
     computeMetrics = true;
+    if isfield(params, 'computeMetrics')
+        computeMetrics = logical(params.computeMetrics);
+    end
     metricInterval = 100;
     initMaxTries = 10;
 
@@ -169,10 +172,12 @@ function [bestScores, gen_hv] = run_nmopso(model, params)
                 PopObj = horzcat(rep.Cost)';
                 if size(PopObj, 2) ~= M, if size(PopObj, 1) == M, PopObj = PopObj'; end, end
                 
-                if computeMetrics && (mod(it, metricInterval) == 0 || it == 1 || it == Generations)
-                    local_gen_hv(it, :) = [calMetric(1, PopObj, problemIndex, M), calMetric(2, PopObj, problemIndex, M)];
-                elseif it > 1
-                    local_gen_hv(it, :) = local_gen_hv(it-1, :);
+                if computeMetrics
+                    if mod(it, metricInterval) == 0 || it == 1 || it == Generations
+                        local_gen_hv(it, :) = [calMetric(1, PopObj, problemIndex, M), calMetric(2, PopObj, problemIndex, M)];
+                    elseif it > 1
+                        local_gen_hv(it, :) = local_gen_hv(it-1, :);
+                    end
                 end
             end
             w = w * wdamp;
@@ -180,7 +185,9 @@ function [bestScores, gen_hv] = run_nmopso(model, params)
         
         run_dir = fullfile(resultsPath, sprintf('Run_%d', run));
         if ~isfolder(run_dir), mkdir(run_dir); end
-        save_data(fullfile(run_dir, 'gen_hv.mat'), local_gen_hv);
+        if computeMetrics
+            save_data(fullfile(run_dir, 'gen_hv.mat'), local_gen_hv);
+        end
         
         if ~isempty(rep)
             PopObj = horzcat(rep.Cost)';
