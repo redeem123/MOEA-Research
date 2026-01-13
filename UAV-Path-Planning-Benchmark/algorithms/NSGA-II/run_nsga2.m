@@ -6,8 +6,11 @@ function [bestScores, gen_hv] = run_nsga2(model, params)
     
     Generations = params.Generations;
     pop = params.pop;
-    M = 4; % Objectives: Length, Threat, Altitude, Smoothness
+    M = 4; % Objectives
     problemIndex = 3; % Static for current benchmark
+    
+    % Override model resolution for better agility
+    model.n = 20;
     
     % Boundary definition
     MinValue = [model.xmin, model.ymin, model.zmin];

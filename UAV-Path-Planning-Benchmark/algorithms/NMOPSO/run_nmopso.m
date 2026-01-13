@@ -2,18 +2,9 @@ function [bestScores, gen_hv] = run_nmopso(model, params)
     Generations = params.Generations;
     pop = params.pop;
     M = 4; problemIndex = 3; 
-    metricInterval = 50;
-    if isfield(params, 'metricInterval')
-        metricInterval = params.metricInterval;
-    end
-    computeMetrics = true;
-    if isfield(params, 'computeMetrics')
-        computeMetrics = params.computeMetrics;
-    end
-    initMaxTries = 50;
-    if isfield(params, 'initMaxTries')
-        initMaxTries = params.initMaxTries;
-    end
+    
+    % Override model resolution
+    model.n = 20;
     
     resultsPath = fullfile(params.resultsDir, params.problemName);
     if ~isfolder(resultsPath), mkdir(resultsPath); end
@@ -31,6 +22,10 @@ function [bestScores, gen_hv] = run_nmopso(model, params)
     
     nRep = 50; wdamp = 0.98; c1 = 1.5; c2 = 1.5;   
     nGrid = 5; alpha_grid = 0.1; beta = 2; gamma = 2; mu = 0.5; delta = 20;           
+    
+    computeMetrics = true;
+    metricInterval = 100;
+    initMaxTries = 10;
 
     parfor run = 1:params.Runs
         fprintf('  - Starting NMOPSO Run %d/%d\n', run, params.Runs);

@@ -41,7 +41,7 @@ end
 terrainStruct = struct();
 terrainStruct.start = [1; 1; 1];
 terrainStruct.end = [200; 200; 100];
-terrainStruct.n = 7;
+terrainStruct.n = 20; % Increased from 7 for better agility in gaps
 terrainStruct.xmin = 1;
 terrainStruct.xmax = terrainSize;
 terrainStruct.ymin = 1;
