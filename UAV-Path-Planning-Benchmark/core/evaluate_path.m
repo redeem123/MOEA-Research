@@ -6,9 +6,15 @@ function objs = evaluate_path(path, model)
     J_large = 1e9;
     
     % --- High-Resolution Interpolation for Collision Check ---
-    % We interpolate the path to ensure we check every 0.5 units of distance
-    % This prevents "skipping" over thin obstacles or gaps
-    full_path = interpolate_path(path, 0.5); 
+    % Interpolate path to check collisions along segments.
+    step_size = 1;
+    if isfield(model, 'collisionStep') && isnumeric(model.collisionStep) && isfinite(model.collisionStep)
+        step_size = model.collisionStep;
+    end
+    if step_size <= 0
+        step_size = 1;
+    end
+    full_path = interpolate_path(path, step_size);
     
     % Basic path stats (using original path for length to assume efficient flight)
     % But for threat/collision, we use the detailed path
@@ -22,29 +28,22 @@ function objs = evaluate_path(path, model)
     J2 = 0;
     
     % 1. Ground Collision Check (High Res)
-    collision = false;
-    for i = 1:size(full_path, 1)
-        x = full_path(i,1);
-        y = full_path(i,2);
-        z = full_path(i,3);
-        
-        % Boundary Check
-        if x < model.xmin || x > model.xmax || y < model.ymin || y > model.ymax
-            collision = true; break;
-        end
-        
-        % Terrain Height Check
-        xi = max(1, min(model.xmax, round(x)));
-        yi = max(1, min(model.ymax, round(y)));
-        groundH = model.H(yi, xi);
-        
-        if z < groundH
-            collision = true; break;
-        end
+    x = full_path(:,1);
+    y = full_path(:,2);
+    z = full_path(:,3);
+
+    % Boundary Check
+    if any(x < model.xmin | x > model.xmax | y < model.ymin | y > model.ymax)
+        objs = [J_large, J_large, J_large, J_large];
+        return;
     end
-    
-    if collision
-        % Return massive penalty for all objectives if crashed
+
+    % Terrain Height Check
+    xi = max(1, min(model.xmax, round(x)));
+    yi = max(1, min(model.ymax, round(y)));
+    groundH = model.H(sub2ind(size(model.H), yi, xi));
+
+    if any(z < groundH)
         objs = [J_large, J_large, J_large, J_large];
         return;
     end
@@ -55,9 +54,9 @@ function objs = evaluate_path(path, model)
         radius = model.nofly_r;
         height = model.nofly_h;
         
-        distToCenter = sqrt((full_path(:,1) - center(1)).^2 + (full_path(:,2) - center(2)).^2);
+        distToCenter = sqrt((x - center(1)).^2 + (y - center(2)).^2);
         inCircle = distToCenter <= radius;
-        belowHeight = full_path(:,3) <= height;
+        belowHeight = z <= height;
         
         violation_count = sum(inCircle & belowHeight);
         
@@ -81,20 +80,27 @@ end
 
 function new_path = interpolate_path(path, step_size)
     % Linear interpolation between points to achieve desired resolution
-    new_path = path(1,:);
-    for i = 1:size(path,1)-1
+    n_points = size(path, 1);
+    n_segments = n_points - 1;
+    steps_per_segment = zeros(n_segments, 1);
+    for i = 1:n_segments
+        dist = norm(path(i+1,:) - path(i,:));
+        steps_per_segment(i) = max(1, ceil(dist / step_size));
+    end
+
+    total_points = 1 + sum(steps_per_segment);
+    new_path = zeros(total_points, 3);
+    new_path(1,:) = path(1,:);
+
+    idx = 2;
+    for i = 1:n_segments
         p1 = path(i,:);
         p2 = path(i+1,:);
-        dist = norm(p2 - p1);
-        num_steps = ceil(dist / step_size);
-        if num_steps > 0
-            % Generate points
-            pts = zeros(num_steps, 3);
-            for d = 1:3
-                temp_pts = linspace(p1(d), p2(d), num_steps+1);
-                pts(:,d) = temp_pts(2:end)';
-            end
-            new_path = [new_path; pts];
-        end
+        num_steps = steps_per_segment(i);
+        t = (1:num_steps) / num_steps;
+        new_path(idx:idx+num_steps-1, 1) = p1(1) + (p2(1) - p1(1)) * t;
+        new_path(idx:idx+num_steps-1, 2) = p1(2) + (p2(2) - p1(2)) * t;
+        new_path(idx:idx+num_steps-1, 3) = p1(3) + (p2(3) - p1(3)) * t;
+        idx = idx + num_steps;
     end
 end
