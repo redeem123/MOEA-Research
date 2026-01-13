@@ -24,6 +24,11 @@ function [bestScores, gen_hv] = run_nsga2(model, params)
         mkdir(resultsPath);
     end
 
+    computeMetrics = true;
+    if isfield(params, 'computeMetrics')
+        computeMetrics = logical(params.computeMetrics);
+    end
+
     parfor run = 1:params.Runs
         fprintf('  - Starting Run %d/%d\n', run, params.Runs);
         
@@ -48,13 +53,15 @@ function [bestScores, gen_hv] = run_nsga2(model, params)
             offspring  = F_operator(current_population, MatingPool', Boundary, model);
             [current_population, FrontNo, CrowdDis] = EnvironmentalSelection([current_population, offspring], pop, pop*2, M);     
             
-            obj = [current_population.objs];
-            PopObj = reshape(obj, M, length(current_population))';
-            
-            if mod(gen, 50) == 0 || gen == 1 || gen == Generations
-                local_gen_hv(gen, :) = [calMetric(1, PopObj, problemIndex, M), calMetric(2, PopObj, problemIndex, M)];
-            elseif gen > 1
-                local_gen_hv(gen, :) = local_gen_hv(gen-1, :);
+            if computeMetrics
+                obj = [current_population.objs];
+                PopObj = reshape(obj, M, length(current_population))';
+                
+                if mod(gen, 50) == 0 || gen == 1 || gen == Generations
+                    local_gen_hv(gen, :) = [calMetric(1, PopObj, problemIndex, M), calMetric(2, PopObj, problemIndex, M)];
+                elseif gen > 1
+                    local_gen_hv(gen, :) = local_gen_hv(gen-1, :);
+                end
             end
         end
         
@@ -65,7 +72,9 @@ function [bestScores, gen_hv] = run_nsga2(model, params)
         end
         
         % Save individual run data
-        save_data(fullfile(run_dir, 'gen_hv.mat'), local_gen_hv);
+        if computeMetrics
+            save_data(fullfile(run_dir, 'gen_hv.mat'), local_gen_hv);
+        end
         
         % Final objectives
         obj = [current_population.objs];
