@@ -58,8 +58,8 @@
             object.rnvec(:, 1) = max(model.xmin, min(model.xmax, object.rnvec(:, 1)));
             object.rnvec(:, 2) = max(model.ymin, min(model.ymax, object.rnvec(:, 2)));
             
-            % Generate Bspline trajectory
-            object.path = testBspline([object.rnvec(:,1)';object.rnvec(:,2)'],model.xmax)'; 
+            % Use control points directly as the path
+            object.path = object.rnvec;
             
             % Adjust for constraints
             object = adjust_constraint_turning_angle(object,model);

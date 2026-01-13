@@ -49,7 +49,7 @@ function newpop = F_operator(population,MatingPool,Boundary,model)
             newpop(pos).rnvec = Offspring((pos-1)*nPoints+1:pos*nPoints,:);
             % Sort control points to maintain a forward-moving path
             newpop(pos).rnvec = sortrows(newpop(pos).rnvec, 1);
-            newpop(pos).path = testBspline([newpop(pos).rnvec(:,1)';newpop(pos).rnvec(:,2)'],model.xmax)';            
+            newpop(pos).path = newpop(pos).rnvec;
             newpop(pos) = adjust_constraint_turning_angle(newpop(pos),model);            
             newpop(pos) = evaluate(newpop(pos), model);
         end
@@ -63,7 +63,7 @@ function newpop = F_operator(population,MatingPool,Boundary,model)
         for pos = 1:N
             newpop(pos).rnvec = Offspring((pos-1)*nPoints+1:pos*nPoints,:);
             newpop(pos).rnvec = sortrows(newpop(pos).rnvec, 1);
-            newpop(pos).path = testBspline([newpop(pos).rnvec(:,1)';newpop(pos).rnvec(:,2)'],model.xmax)';
+            newpop(pos).path = newpop(pos).rnvec;
             newpop(pos) = adjust_constraint_turning_angle(newpop(pos),model);
             newpop(pos) = evaluate(newpop(pos), model);
         end
